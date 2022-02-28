@@ -15,8 +15,6 @@
 
 import socketserver
 import re
-import socket
-import sys
 import time
 import logging
 
@@ -44,13 +42,7 @@ rx_contact = re.compile("^Contact:")
 rx_ccontact = re.compile("^m:")
 rx_uri = re.compile("sip:([^@]*)@([^;>$]*)")
 rx_addr = re.compile("sip:([^ ;>$]*)")
-# rx_addrport = re.compile("([^:]*):(.*)")
 rx_code = re.compile("^SIP/2.0 ([^ ]*)")
-# rx_invalid = re.compile("^192\.168")
-# rx_invalid2 = re.compile("^10\.")
-# rx_cseq = re.compile("^CSeq:")
-# rx_callid = re.compile("Call-ID: (.*)$")
-# rx_rr = re.compile("^Record-Route:")
 rx_request_uri = re.compile("^([^ ]*) sip:([^ ]*) SIP/2.0")
 rx_route = re.compile("^Route:")
 rx_contentlength = re.compile("^Content-Length:")
@@ -121,7 +113,6 @@ class UDPHandler(socketserver.BaseRequestHandler):
                     branch = md.group(1)
                     via = "%s;branch=%sm" % (topvia, branch)
                     data.append(via)
-                # rport processing
                 if rx_rport.search(line):
                     text = "received=%s;rport=%d" % self.client_address
                     via = line.replace("rport", text)
@@ -300,10 +291,8 @@ class UDPHandler(socketserver.BaseRequestHandler):
             logging.info("destination %s" % destination)
             if destination in registrar:
                 socket, claddr = self.getSocketInfo(destination)
-                # self.changeRequestUri()
                 self.data = self.addTopVia()
                 data = self.removeRouteHeader()
-                # insert Record-Route
                 data.insert(1, recordroute)
                 text = "\r\n".join(data)
                 socket.sendto(text.encode(), claddr)
@@ -324,10 +313,8 @@ class UDPHandler(socketserver.BaseRequestHandler):
             logging.info("destination %s" % destination)
             if destination in registrar and self.checkValidity(destination):
                 socket, claddr = self.getSocketInfo(destination)
-                # self.changeRequestUri()
                 self.data = self.addTopVia()
                 data = self.removeRouteHeader()
-                # insert Record-Route
                 data.insert(1, recordroute)
                 text = "\r\n".join(data)
                 socket.sendto(text.encode(), claddr)
@@ -389,10 +376,8 @@ class UDPHandler(socketserver.BaseRequestHandler):
                 self.processCode()
             else:
                 logging.error("request_uri %s" % request_uri)
-                # print "message %s unknown" % self.data
 
     def handle(self):
-        # socket.setdefaulttimeout(120)
         data = self.request[0].decode('Windows-1252')
         self.data = data.split("\r\n")
         self.socket = self.request[1]
